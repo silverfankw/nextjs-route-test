@@ -1,13 +1,14 @@
-import styles from '../styles/Home.module.css'
-import Test from './Test'
 
 export default function Home(props) {
   const {routeList, stopList} = props
 
   console.log(props)
   return (
-    <div className={styles.container}>
-      /route/search
+    <div className="container">
+      <h1>Homepage</h1>
+      <div>
+        <a className="text-sm" href="./route/search">Route Search</a>
+      </div>
     </div>
   )
 }
