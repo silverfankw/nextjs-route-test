@@ -1,8 +1,7 @@
-
 export default function Home(props) {
   const {routeList, stopList} = props
 
-  console.log(props)
+  // console.log(props)
   return (
     <div className="container">
       <h1>Homepage</h1>

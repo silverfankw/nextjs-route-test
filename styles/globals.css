@@ -31,3 +31,7 @@ a {
 .form-input {
   @apply h-10 border-2 rounded-md
 }
+
+.select-input {
+  @apply h-10 border-2 rounded-md text-stone-800
+}

@@ -7,17 +7,15 @@ const login = props => {
 
   const router = useRouter()
   const [loginInfo, setLoginInfo] = useState({username: "", password: ""})
-  const [serverMsg, setServerMsg] = useState("Not logged in")
-  const [cookie, setCookie] = useCookies([])
-
-  const isLoggedIn = () => Boolean(cookie.token)
+  const [authenticated, setAuthenticated] = useState("")
+  const [cookie, setCookie] = useCookies(["token"])
 
   useEffect(() => {
     console.log(cookie)
   }, [cookie])
 
   const handleChange = (e, key) => setLoginInfo({...loginInfo, [key]: e.target.value})
-  const debounceOnChange = useCallback(debounce(handleChange, 200))
+  // const debounceOnChange = useCallback(debounce(handleChange, 200))
 
   const login = async () => {
     try {
@@ -31,8 +29,14 @@ const login = props => {
         }
       )
       .then(resp => {
-        setServerMsg(`${resp.status} ${resp.statusText}`)
-        return resp.json()
+        if (resp.status == 200) {
+          setAuthenticated(true)
+          return resp.json()
+        }
+        else {
+          setAuthenticated(false)
+          return
+        }
       })
       .then(json => {
         setCookie("token", json.token, {
@@ -40,22 +44,24 @@ const login = props => {
           maxAge: 36000, // Expires after 12hr
           sameSite: true,
         })
+        router.push("/")
       })
     }
     catch (err) { console.log(err) }
   }
 
+
   return (
     <div className="container">
       
-      <div className={`border w-1/4 h-${isLoggedIn ? '1/4' : '1/3'} rounded-md p-5 flex flex-col gap-3`}>
+      <div className={`border w-1/4 h-1/3 rounded-md p-5 flex flex-col gap-3`}>
         <div className="flex justify-center text-xs">
-          Status - {isLoggedIn ? `Already logged in` : serverMsg}
+          Authenticated - {authenticated}
         </div>
-        <input className="form-input" placeholder="user" onChange={e => debounceOnChange(e, "username")} disabled={isLoggedIn}/>
-        <input className="form-input" placeholder="password" onChange={e => debounceOnChange(e, "password")} disabled={isLoggedIn}/>
+        <input className="form-input" placeholder="user" onChange={e => handleChange(e, "username")}/>
+        <input className="form-input" type="password" placeholder="password" onChange={e => handleChange(e, "password")}/>
         <div className="flex flex-row justify-center">        
-          <button className="h-8 border rounded-md text-md w-1/3" name="login" onClick={login} disabled={isLoggedIn}>login</button>
+          <button className="h-8 border rounded-md text-md w-1/3" name="login" onClick={e => login()}>login</button>
         </div>
 
       </div>

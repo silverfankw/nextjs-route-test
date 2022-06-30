@@ -1,45 +1,50 @@
-import { useRouter } from "next/router"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useCookies } from "react-cookie"
+import useSWR from "swr"
+
+import { NormalFetcher } from "../../helper/fetcher"
 
 const routeSearch = props => {
-  const { result, status } = props
-  const router = useRouter()
+  const [criteria, setCriteria] = useState({co: "kmb", route: ""})
+  const [cookie, setCookie] = useCookies(["token"])
+  const [result, setResult] = useState([])
 
-  useEffect(() => { if (status !== 200) router.push("/login") }, [status])
+  console.log(result)  
+  useEffect(() => console.log(criteria), [criteria])
+
+  const handleCriteriaChange = (e, key) => setCriteria({...criteria, [key]: e.target.value})
+
+  const searchRoute = async () => {
+    const apiResult = await fetch(`http://localhost:4000/routes/details?co=${criteria.co}&route=${criteria.route}`, 
+      {mode: "cors", headers: {"Content-Type": 'application/json', "X-jwt-token": cookie.token}}
+    )
+    .then(resp => resp.json()).then(data => setResult(data))
+  }
 
   return (
-   
   <div className="container">
-    <div className={`border w-1/3 rounded-md p-5 flex gap-3`}>
-      <select name="co"><option value="test"></option></select>
-      <input placeholder="route no."/>
+    <div className={`flex border w-1/3 rounded-md p-5 gap-3`}>
+      <select className="select-input w-1/4" onChange={e => handleCriteriaChange(e, "co")}>
+        <option value="kmb">K</option>
+        <option value="ctb">C</option>
+        <option value="nwfb">NW</option>
+        <option value="lwb">L</option>
+        <option value="nlb">NL</option>
+        <option value="gmb">G</option>
+      </select>
+      <input className="form-input w-1/2" placeholder="route no." onChange={e => handleCriteriaChange(e, "route")}/>
       <div className="flex flex-row justify-center">        
-        <button className="h-8 border rounded-md text-md" name="login" onClick={console.log("s")}>Search</button>
+        <button className="h-8 border rounded-md text-md" name="login" onClick={() => searchRoute()}>Search</button>
       </div>
     </div>
     {
-      status === 200 ?  
-      result.map(r => <p>{`${r.route}-${r.orig.en}-${r.dest.en}`}</p>):
-      <div>Authentication Error</div>
+      result.length > 0 &&
+      <div className="flex flex-col text-xs">
+        {result.map(r => <div>{`${r.co}-${r.route}-${r.orig.en}-${r.dest.en}`}</div>)}
+      </div>
     }
    </div>
   )
-}
-
-export async function getServerSideProps({query, req, res}) {
-
-  const { token } = req.cookies
-
-  if (token) {
-    const {co, route} = query
-    const response = await fetch(`http://localhost:4000/routes/details?co=${co}&route=${route}`
-    , {headers: {"X-jwt-token": token}})
-
-    return {props: {status: response.status, result: await response.json()}}
-
-  }
-  else return {props: {result: [], status: 401}}
-
 }
 
 export default routeSearch
